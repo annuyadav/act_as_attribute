@@ -8,7 +8,7 @@ module ActAsAttributes
   module ClassMethods
 
     def get_constants
-      self::AVAILABLE_ATTRIBUTES ||= ["name"]
+      self::AVAILABLE_ATTRIBUTES ||= []
       self::ACCEPTANCE_LEVEL ||= "error"
     end
 
