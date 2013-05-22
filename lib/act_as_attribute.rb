@@ -33,22 +33,28 @@ module ActAsAttributes
           deal_with_duplicate_method(attr)
         end
 
-        define_method(attr) do
+        define_method(attr.underscore) do
           available_objects = self.send(model_name)
           if available_objects.map(&model_attr_as_key.to_sym).include? attr
             available_objects.send("find_by_#{model_attr_as_key}", attr).send(model_attr_as_value)
           else
-            "method not defined"
+            new_object = model_name.to_s.classify.constantize.create(model_attr_as_key.to_sym => attr)
+            available_objects << new_object
+            new_object.send(model_attr_as_value)
           end
         end
 
-        define_method("#{attr}=") do |value|
+        define_method("#{attr.underscore}=") do |value|
           available_objects = self.send(model_name)
           if available_objects.map(&model_attr_as_key.to_sym).include? attr
             new_association= available_objects.send("find_by_#{model_attr_as_key}", attr)
-            new_association.update_attributes(model_attr_as_value.to_sym => value)
+            new_association.send("#{model_attr_as_value.to_s}=", value)
+            new_association.save
           else
-            available_objects << model_name.to_s.classify.constantize.create(model_attr_as_key.to_sym => attr, model_attr_as_value.to_sym => value)
+            new_object = model_name.to_s.classify.constantize.create(model_attr_as_key.to_sym => attr)
+            new_object.send("#{model_attr_as_value}=", value)
+            new_object.save
+            available_objects << new_object
           end
         end
       end
